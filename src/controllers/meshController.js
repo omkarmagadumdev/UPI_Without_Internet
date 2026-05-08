@@ -42,7 +42,11 @@ function flush(req,res){
   const results = uploads.map(u => ({
     bridgeNode: u.bridgeNodeId,
     packetId: u.packet.packetId.slice(0, 8),
-    ...bridgeIngest.ingest({ciphertext:u.packet.ciphertext, bridgeId:u.bridgeNodeId})
+    ...bridgeIngest.ingest({
+      ciphertext: u.packet.ciphertext,
+      bridgeId: u.bridgeNodeId,
+      hopCount: u.packet.hopCount || 0
+    })
   }));
   res.json({uploadsAttempted: uploads.length, results});
 }
