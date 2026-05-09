@@ -261,15 +261,4 @@
   setInterval(refresh, 3000);
   </script>
   </body>
-  </html>
-    document.getElementById('reset').addEventListener('click', async ()=>{
-      await fetch('/api/mesh/reset',{method:'POST'});
-      log('Mesh reset complete');
-      setTimeout(refresh,300);
-    });
-
-    setInterval(refresh,2500);
-    refresh();
-  </script>
-</body>
 </html>
