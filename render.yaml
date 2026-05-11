@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: upi-mesh-demo
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeploy: true
+    disk:
+      name: upi-mesh-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DB_FILE
+        value: /var/data/upi_demo.db
+      - key: IDEMPOTENCY_TTL_SECONDS
+        value: "86400"
+      - key: PACKET_FRESHNESS_SECONDS
+        value: "86400"

@@ -69,6 +69,25 @@ npm test -- --runInBand
 
 The main suite is `test/crypto.test.js` — it verifies encryption/decryption, tamper rejection, exact-once settlement, mesh gossip/flush behavior, metrics, and error responses.
 
+## Deploy on Render
+
+This project is set up for a Docker deploy on Render. The app uses SQLite, so the Render service definition mounts a persistent disk at `/var/data` and points `DB_FILE` there.
+
+Deploy steps:
+
+1. Push this repo to GitHub.
+2. Create a new Render Web Service from the repository.
+3. Use the included `render.yaml` so Render picks up the Dockerfile, disk, and environment variables.
+4. After the service is created, open the Render dashboard and confirm the app boots and the database file is created under `/var/data`.
+
+Required runtime variables:
+
+- `DB_FILE=/var/data/upi_demo.db`
+- `IDEMPOTENCY_TTL_SECONDS=86400`
+- `PACKET_FRESHNESS_SECONDS=86400`
+
+Optional: you can tune the TTL values later from the Render environment settings without changing code.
+
 ---
 
 ## The demo flow (step by step)
