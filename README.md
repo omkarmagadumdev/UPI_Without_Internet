@@ -6,6 +6,15 @@ This repo is the **server side** of that system, plus a software simulator of th
 
 ---
 
+## 🚀 Live Demo
+
+Try the app right now:  
+**[https://upi-without-internet-coig.onrender.com/](https://upi-without-internet-coig.onrender.com/)**
+
+(Free tier on Render, so the app may sleep after inactivity — open the link and it will wake up in a few seconds.)
+
+---
+
 ## Table of Contents
 
 1. [What this demo proves](#what-this-demo-proves)
@@ -71,16 +80,19 @@ The main suite is `test/crypto.test.js` — it verifies encryption/decryption, t
 
 ## Deploy on Render
 
-This project is set up for a Docker deploy on Render. The app uses SQLite, so the Render service definition mounts a persistent disk at `/var/data` and points `DB_FILE` there.
+This project is set up for Docker deployment on Render. The app uses SQLite with a persistent disk mounted at `/var/data`.
 
-Deploy steps:
+**Already deployed?** Your live instance is here:  
+**[https://upi-without-internet-coig.onrender.com/](https://upi-without-internet-coig.onrender.com/)**
+
+**Deploy your own copy:**
 
 1. Push this repo to GitHub.
 2. Create a new Render Web Service from the repository.
 3. Use the included `render.yaml` so Render picks up the Dockerfile, disk, and environment variables.
-4. After the service is created, open the Render dashboard and confirm the app boots and the database file is created under `/var/data`.
+4. After the service is created, Render will auto-deploy whenever you push to the main branch.
 
-Required runtime variables:
+Required runtime variables (already set in `render.yaml`):
 
 - `DB_FILE=/var/data/upi_demo.db`
 - `IDEMPOTENCY_TTL_SECONDS=86400`
