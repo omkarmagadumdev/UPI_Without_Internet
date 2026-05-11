@@ -1,5 +1,13 @@
 const config = require('../config');
-const demoSeed = require('../data/demoSeed');
+
+const demoSeed = {
+  accounts: [
+    { vpa: 'alice@demo', holderName: 'Alice', balance: '5000.00' },
+    { vpa: 'bob@demo', holderName: 'Bob', balance: '1000.00' },
+    { vpa: 'carol@demo', holderName: 'Carol', balance: '2500.00' },
+    { vpa: 'dave@demo', holderName: 'Dave', balance: '500.00' }
+  ]
+};
 
 function getAll(){
   const db = config.db();
