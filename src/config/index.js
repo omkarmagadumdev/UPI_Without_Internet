@@ -17,7 +17,11 @@ const env = {
   PORT: process.env.PORT || 3000,
   IDEMPOTENCY_TTL_SECONDS: Number(process.env.IDEMPOTENCY_TTL_SECONDS || 86400),
   PACKET_FRESHNESS_SECONDS: Number(process.env.PACKET_FRESHNESS_SECONDS || 86400),
-  DB_FILE: process.env.DB_FILE || path.join(process.cwd(),'data','upi_demo.db')
+  DB_FILE: process.env.DB_FILE || path.join(process.cwd(),'data','upi_demo.db'),
+  TLS_KEY_PATH: process.env.TLS_KEY_PATH || null,
+  TLS_CERT_PATH: process.env.TLS_CERT_PATH || null,
+  TLS_CA_PATH: process.env.TLS_CA_PATH || null,
+  REQUIRE_CLIENT_CERT: process.env.REQUIRE_CLIENT_CERT === 'true'
 };
 
 let db;

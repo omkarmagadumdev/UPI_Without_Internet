@@ -78,6 +78,79 @@ npm test
 
 The main suite is `test/crypto.test.js` — it verifies encryption/decryption, tamper rejection, exact-once settlement, mesh gossip/flush behavior, metrics, and error responses.
 
+### Optional: TLS and Mutual TLS (mTLS)
+
+The server supports optional HTTPS with mutual TLS (mTLS) for bridge endpoint authentication. This is useful for production where you want to ensure only authorized bridge nodes can submit packets.
+
+**Step 1: Generate self-signed certificates for local development**
+
+```bash
+./scripts/generate-certs.sh
+```
+
+This creates certificate files in a `certs/` folder:
+- `server.key` / `server.crt` — server certificate
+- `client.key` / `client.crt` — client certificate for testing
+- `ca.crt` — CA certificate for validating clients
+
+**Step 2: Run the server with TLS (no mTLS validation)**
+
+```bash
+export TLS_KEY_PATH='./certs/server.key'
+export TLS_CERT_PATH='./certs/server.crt'
+npm start
+```
+
+The server now listens on HTTPS. Check the startup message:
+```
+UPI Mesh Node demo listening on HTTPS://3000
+```
+
+**Step 3: Run the server with mTLS (validates client certificates)**
+
+```bash
+export TLS_KEY_PATH='./certs/server.key'
+export TLS_CERT_PATH='./certs/server.crt'
+export TLS_CA_PATH='./certs/ca.crt'
+export REQUIRE_CLIENT_CERT=true
+npm start
+```
+
+Now the server requires `/api/bridge/ingest` requests to provide a valid client certificate. Requests without a valid client cert are rejected with HTTP 401.
+
+**Step 4: Test with curl (mTLS)**
+
+```bash
+# This will fail (no client cert)
+curl --cacert certs/ca.crt https://localhost:3000/api/bridge/ingest
+
+# This will succeed (client cert + key provided)
+curl --cacert certs/ca.crt \
+     --cert certs/client.crt \
+     --key certs/client.key \
+     -X POST \
+     -H 'Content-Type: application/json' \
+     -d '{"ciphertext":"...", "bridgeId":"bridge-1"}' \
+     https://localhost:3000/api/bridge/ingest
+```
+
+**TLS Configuration Environment Variables:**
+
+| Variable | Example | Description |
+|---|---|---|
+| `TLS_KEY_PATH` | `./certs/server.key` | Path to server private key (enables HTTPS) |
+| `TLS_CERT_PATH` | `./certs/server.crt` | Path to server certificate (enables HTTPS) |
+| `TLS_CA_PATH` | `./certs/ca.crt` | Path to CA cert for client validation (optional, required if `REQUIRE_CLIENT_CERT=true`) |
+| `REQUIRE_CLIENT_CERT` | `true` | If set, `/api/bridge/ingest` requires client certificate validation (default: `false`) |
+
+**For production:**
+- Replace self-signed certs with certificates signed by a trusted CA (e.g., Let's Encrypt).
+- Set `TLS_KEY_PATH`, `TLS_CERT_PATH` in your deployment environment.
+- Enable `REQUIRE_CLIENT_CERT=true` to enforce mTLS on bridge endpoints.
+- Store private keys in a secure secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault).
+
+---
+
 ## Deploy on Render
 
 This project is set up for Docker deployment on Render. The app uses SQLite with a persistent disk mounted at `/var/data`.
@@ -270,21 +343,27 @@ See `src/services/bridgeIngestService.js` for the freshness check.
 
 ```
 UPI_Without_Internet/
-├── index.js                                 Express bootstrap + middleware
+├── index.js                                 Express bootstrap + HTTPS/TLS setup
 ├── load_test.js                             Concurrent load test runner for `/api/demo/send`
 ├── package.json                             npm scripts and dependencies
+├── scripts/generate-certs.sh                Generate self-signed TLS certs for dev
 ├── src/
 │   ├── config/index.js                      Env + SQLite schema + seeding
 │   ├── controllers/                         API and dashboard controllers
 │   ├── data/demoSeed.js                     Seed accounts used by full demo reset
 │   ├── errors/appError.js                   Standardized API errors
 │   ├── repository/                          accounts/transactions/idempotency data access
-│   ├── routes/index.js                      Route map
+│   ├── routes/index.js                      Route map + mTLS middleware
 │   ├── services/                            mesh, demo send, bridge ingest, crypto orchestration
-│   ├── utils/crypto.js                      RSA/AES/hash helpers
+│   ├── utils/                               
+│   │   ├── crypto.js                        RSA/AES/hash helpers
+│   │   └── tlsManager.js                    HTTPS server + mTLS setup and validation
 │   ├── validators/index.js                  Request validation
 │   └── views/dashboard.ejs                  SSR dashboard
-└── test/crypto.test.js                      End-to-end behavior tests
+└── test/
+    ├── crypto.test.js                       End-to-end behavior tests
+    ├── redis.integration.test.js            Redis-specific idempotency tests (optional)
+    └── tls.test.js                          TLS/mTLS middleware and setup tests
 ```
 
 ---

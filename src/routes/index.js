@@ -3,6 +3,8 @@ const router = express.Router();
 const api = require('../controllers/apiController');
 const mesh = require('../controllers/meshController');
 const bridge = require('../controllers/bridgeController');
+const config = require('../config');
+const TLSManager = require('../utils/tlsManager');
 
 // dashboard
 router.get('/', mesh.dashboard);
@@ -23,7 +25,11 @@ router.post('/api/mesh/flush', mesh.flush);
 router.post('/api/mesh/reset', mesh.reset);
 router.post('/api/demo/reset-all', mesh.fullReset);
 
-// bridge
-router.post('/api/bridge/ingest', bridge.ingest);
+// bridge - apply mTLS middleware if REQUIRE_CLIENT_CERT is enabled
+if (config.env.REQUIRE_CLIENT_CERT) {
+  router.post('/api/bridge/ingest', TLSManager.mTLSMiddleware, bridge.ingest);
+} else {
+  router.post('/api/bridge/ingest', bridge.ingest);
+}
 
 module.exports = router;

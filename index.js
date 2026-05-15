@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const config = require('./src/config');
 const routes = require('./src/routes');
 const { AppError } = require('./src/errors/appError');
+const TLSManager = require('./src/utils/tlsManager');
 
 async function bootstrap(){
   await config.init();
@@ -61,9 +62,24 @@ async function bootstrap(){
   });
 
   const port = config.env.PORT || 3000;
-  const server = app.listen(port, ()=>{
-    console.log(`UPI Mesh Node demo listening on ${port}`);
-  });
+  let server;
+  
+  // Initialize TLS if configured
+  const tlsManager = new TLSManager(config.env);
+  const tlsOptions = tlsManager.init();
+  
+  if (tlsOptions) {
+    server = tlsManager.createServer(app);
+    server.listen(port, () => {
+      const mtlsEnabled = config.env.REQUIRE_CLIENT_CERT ? ' (with mTLS)' : '';
+      console.log(`UPI Mesh Node demo listening on HTTPS://${port}${mtlsEnabled}`);
+    });
+  } else {
+    server = app.listen(port, () => {
+      console.log(`UPI Mesh Node demo listening on HTTP://${port}`);
+    });
+  }
+  
   return {app, server};
 }
 
