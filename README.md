@@ -58,6 +58,29 @@ npm install
 npm start
 ```
 
+Optional: run a local Redis instance for faster, atomic idempotency claims (recommended for load testing)
+
+```bash
+# start Redis in Docker (local dev only)
+docker run -p 6379:6379 --name upi-redis -d redis:7
+
+# then start the app with REDIS_URL
+REDIS_URL=redis://localhost:6379 npm start
+```
+
+If you don't have Docker available in WSL, you can install Redis directly in the distro (Ubuntu) with apt:
+
+```bash
+sudo apt update
+sudo apt install -y redis-server
+sudo service redis-server start
+
+# then start the app pointing at the local Redis
+REDIS_URL=redis://localhost:6379 npm start
+```
+
+If you're on Windows using Docker Desktop, make sure Docker Desktop is running and WSL integration is enabled for your distribution: open Docker Desktop → Settings → Resources → WSL Integration → enable your distro. Then run the Docker command above from the WSL terminal.
+
 ### Open the dashboard
 
 Once you see `UPI Mesh Node demo listening on 3000`, open:

@@ -1,0 +1,41 @@
+name: Redis Integration Tests
+
+on:
+  push:
+    branches: [ main, feature/*, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-with-redis:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests with Redis
+        run: npm test -- --runInBand
+        env:
+          REDIS_URL: redis://localhost:6379
+          PORT: 0
+
+      - name: Run load test (optional)
+        run: TOTAL_REQUESTS=100 npm run loadtest
+        continue-on-error: true

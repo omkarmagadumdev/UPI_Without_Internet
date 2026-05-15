@@ -35,18 +35,17 @@ function gossip(req,res){
   res.json({ transfers: result.transfers, deviceCounts: result.deviceCounts });
 }
 
-function flush(req,res){
+async function flush(req,res){
   const uploads = mesh.getState()
     .filter(d => d.hasInternet)
     .flatMap(d => mesh.flushDevice(d.deviceId).map(packet => ({ packet, bridgeNodeId: d.deviceId })));
-  const results = uploads.map(u => ({
-    bridgeNode: u.bridgeNodeId,
-    packetId: u.packet.packetId.slice(0, 8),
-    ...bridgeIngest.ingest({
+  const results = await Promise.all(uploads.map(async (u) => {
+    const r = await bridgeIngest.ingest({
       ciphertext: u.packet.ciphertext,
       bridgeId: u.bridgeNodeId,
       hopCount: u.packet.hopCount || 0
-    })
+    });
+    return { bridgeNode: u.bridgeNodeId, packetId: u.packet.packetId.slice(0,8), ...r };
   }));
   res.json({uploadsAttempted: uploads.length, results});
 }

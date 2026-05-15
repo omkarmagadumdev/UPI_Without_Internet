@@ -15,6 +15,7 @@ const demoSeed = {
 
 const env = {
   PORT: process.env.PORT || 3000,
+  REDIS_URL: process.env.REDIS_URL || null,
   IDEMPOTENCY_TTL_SECONDS: Number(process.env.IDEMPOTENCY_TTL_SECONDS || 86400),
   PACKET_FRESHNESS_SECONDS: Number(process.env.PACKET_FRESHNESS_SECONDS || 86400),
   DB_FILE: process.env.DB_FILE || path.join(process.cwd(),'data','upi_demo.db')

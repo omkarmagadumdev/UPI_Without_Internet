@@ -31,6 +31,9 @@ describe('UPI mesh demo', () => {
     if (fs.existsSync(dbFile)) {
       fs.unlinkSync(dbFile);
     }
+    if (typeof idempotencyRepo.shutdown === 'function') {
+      try{ await idempotencyRepo.shutdown(); }catch(e){}
+    }
   });
 
   beforeEach(() => {
@@ -100,7 +103,7 @@ describe('UPI mesh demo', () => {
     expect(decrypted.nonce).toBe(original.nonce);
   });
 
-  test('tamperedCiphertextIsRejected', () => {
+  test('tamperedCiphertextIsRejected', async () => {
     const packet = demoService.createPaymentInstruction({
       senderVpa: 'alice@demo',
       receiverVpa: 'bob@demo',
@@ -111,13 +114,14 @@ describe('UPI mesh demo', () => {
 
     const chars = packet.ciphertext.split('');
     chars[Math.floor(chars.length / 2)] = chars[Math.floor(chars.length / 2)] === 'A' ? 'B' : 'A';
-    const result = bridgeService.ingest({ ciphertext: chars.join(''), bridgeId: 'bridge-x' });
+    const maybe = bridgeService.ingest({ ciphertext: chars.join(''), bridgeId: 'bridge-x' });
+    const result = (maybe && typeof maybe.then === 'function') ? await maybe : maybe;
 
     expect(result.outcome).toBe('INVALID');
     expect(result.reason).toBe('decryption_failed');
   });
 
-  test('singlePacketDeliveredByThreeBridgesSettlesExactlyOnce', () => {
+  test('singlePacketDeliveredByThreeBridgesSettlesExactlyOnce', async () => {
     const startingAlice = accountRepo.findByVpa('alice@demo').balance;
     const startingBob = accountRepo.findByVpa('bob@demo').balance;
 
@@ -129,11 +133,15 @@ describe('UPI mesh demo', () => {
       ttl: 5
     });
 
-    const results = [
-      bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-1' }),
-      bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-2' }),
-      bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-3' })
-    ];
+    const maybe1 = bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-1' });
+    const maybe2 = bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-2' });
+    const maybe3 = bridgeService.ingest({ ciphertext: packet.ciphertext, bridgeId: 'bridge-3' });
+
+    const r1 = (maybe1 && typeof maybe1.then === 'function') ? await maybe1 : maybe1;
+    const r2 = (maybe2 && typeof maybe2.then === 'function') ? await maybe2 : maybe2;
+    const r3 = (maybe3 && typeof maybe3.then === 'function') ? await maybe3 : maybe3;
+
+    const results = [r1, r2, r3];
 
     expect(results.filter(r => r.outcome === 'SETTLED')).toHaveLength(1);
     expect(results.filter(r => r.outcome === 'DUPLICATE_DROPPED')).toHaveLength(2);
