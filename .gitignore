@@ -23,3 +23,10 @@ data/
 target/
 .mvn/wrapper/maven-wrapper.jar
 *.class
+certs/server.key
+certs/ca.crt
+.gitignore
+certs/client.crt
+certs/client.key
+.gitignore
+certs/server.crt
