@@ -73,7 +73,7 @@ You'll get a dark dashboard with everything you need to drive the demo.
 ### Run the tests
 
 ```bash
-npm test -- --runInBand
+npm test
 ```
 
 The main suite is `test/crypto.test.js` — it verifies encryption/decryption, tamper rejection, exact-once settlement, mesh gossip/flush behavior, metrics, and error responses.
@@ -144,7 +144,7 @@ The backend pipeline runs:
 
 Watch the **Account Balances** table — money has moved. Watch the **Transaction Ledger** — a new row appears.
 
-### Step 4 — Demonstrate idempotency (the killer feature)
+### Step 4 — Demonstrate idempotency (Exact-once settlement)
 
 Reset the mesh. Inject a single packet. Run gossip 2 times. Now **all 5 devices hold the same packet, including multiple bridges in a more complex setup**.
 
@@ -156,7 +156,7 @@ To really see idempotency in action, modify `src/services/meshService.js` to see
 
 To exercise the duplicate case quickly, run:
 ```bash
-npm test -- --runInBand
+npm test
 ```
 
 This test path creates one packet, delivers it from multiple bridge attempts, and verifies that exactly one settles while duplicates are dropped.
@@ -271,6 +271,7 @@ See `src/services/bridgeIngestService.js` for the freshness check.
 ```
 UPI_Without_Internet/
 ├── index.js                                 Express bootstrap + middleware
+├── load_test.js                             Concurrent load test runner for `/api/demo/send`
 ├── package.json                             npm scripts and dependencies
 ├── src/
 │   ├── config/index.js                      Env + SQLite schema + seeding
@@ -333,7 +334,12 @@ Response:
 
 Run all tests:
 ```
-npm test -- --runInBand
+npm test
+```
+
+Run the load test script:
+```bash
+TOTAL_REQUESTS=100 npm run loadtest
 ```
 
 The three included tests:
@@ -346,7 +352,7 @@ The three included tests:
 
 ## What's NOT real (and what would change for production)
 
-This is a teaching demo. To make it production-grade you'd swap these things:
+This project is intentionally built as a portfolio/demo implementation; for a production rollout, these are the main upgrades I would make:
 
 | What's in the demo | What it would be in production |
 |---|---|

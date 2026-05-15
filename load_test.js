@@ -4,14 +4,16 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 const ENDPOINT = process.env.ENDPOINT || '/api/demo/send';
 const TOTAL_REQUESTS = Number(process.env.TOTAL_REQUESTS || process.argv[2] || 50);
 
-if (Number.isNaN(TOTAL_REQUESTS) || TOTAL_REQUESTS <= 0) {
-  console.error('TOTAL_REQUESTS must be a positive number.');
-  process.exit(1);
-}
+function validateOrExit() {
+  if (Number.isNaN(TOTAL_REQUESTS) || TOTAL_REQUESTS <= 0) {
+    console.error('TOTAL_REQUESTS must be a positive number.');
+    process.exit(1);
+  }
 
-if (typeof fetch !== 'function') {
-  console.error('Global fetch is not available. Use Node.js 18+ or install axios and update this script.');
-  process.exit(1);
+  if (typeof fetch !== 'function') {
+    console.error('Global fetch is not available. Use Node.js 18+ or install axios and update this script.');
+    process.exit(1);
+  }
 }
 
 function buildTransaction(index) {
@@ -47,7 +49,6 @@ async function main() {
 
   const startTime = performance.now();
 
-  // Promise.all ensures all requests are tracked and completed before metrics are calculated.
   const results = await Promise.all(
     transactions.map(async (tx) => {
       try {
@@ -78,8 +79,12 @@ async function main() {
   console.log('========================');
 }
 
+module.exports = { buildTransaction, sendTransaction, main, TOTAL_REQUESTS };
 
-main().catch((error) => {
-  console.error('Load test failed:', error);
-  process.exit(1);
-});
+if (require.main === module) {
+  validateOrExit();
+  main().catch((error) => {
+    console.error('Load test failed:', error);
+    process.exit(1);
+  });
+}
